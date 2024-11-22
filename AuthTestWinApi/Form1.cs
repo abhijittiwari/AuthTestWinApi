@@ -80,6 +80,8 @@ namespace AuthTestWinApi
 
                     MessageBox.Show($"Authentication successful! \nUser: {username}\nAuth Type: {authType}",
                         "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    string ticketInfo = GetKerberosTicketInfo();
+                    MessageBox.Show(ticketInfo, "Kerberos Ticket Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
                 else
                 {
@@ -124,7 +126,46 @@ namespace AuthTestWinApi
                 return ex.ToString();
             }
         }
-    
+        private string GetKerberosTicketInfo()
+        {
+            try
+            {
+                // Use WindowsIdentity to check the current user's Kerberos authentication type
+                var identity = WindowsIdentity.GetCurrent();
+                string authType = identity.AuthenticationType; // "Kerberos" or "NTLM"
+
+                if (authType.Equals("Kerberos", StringComparison.OrdinalIgnoreCase))
+                {
+                    // If Kerberos is used, retrieve ticket info using the klist tool in the background
+                    var process = new System.Diagnostics.Process
+                    {
+                        StartInfo = new System.Diagnostics.ProcessStartInfo
+                        {
+                            FileName = "klist",
+                            Arguments = "tickets", // This command lists the Kerberos tickets
+                            RedirectStandardOutput = true,
+                            UseShellExecute = false,
+                            CreateNoWindow = true
+                        }
+                    };
+
+                    process.Start();
+                    string output = process.StandardOutput.ReadToEnd();
+                    process.WaitForExit();
+                    return output;
+                }
+                else
+                {
+                    return "Kerberos ticket was not obtained.";
+                }
+            }
+            catch (Exception ex)
+            {
+                // Handle any errors retrieving the ticket info
+                return $"Error retrieving ticket info: {ex.Message}";
+            }
+        }
+
 
     }
     
