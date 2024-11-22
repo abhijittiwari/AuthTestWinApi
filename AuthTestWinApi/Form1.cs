@@ -121,7 +121,7 @@ namespace AuthTestWinApi
             catch (Exception ex)
             {
                 // In case of an error retrieving the authentication type, return "Unknown"
-                return "Unknown";
+                return ex.ToString();
             }
         }
     
